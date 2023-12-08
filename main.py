@@ -15,10 +15,10 @@ with col1:
     st.header('Персональный помощник для студентов')
 
 with col2:
-    st.image("ssets/happy_stud.jpg")
+    st.image("assets/happy_stud.jpg")
 
 # Боковая панель
-st.sidebar.image("ssets/Text_Sum.png", width=300)
+st.sidebar.image("assets/Text_Sum.png", width=300)
 st.sidebar.title("About the project:")
 st.sidebar.info(
     """
