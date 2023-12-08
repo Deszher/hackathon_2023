@@ -1,7 +1,7 @@
 import time
 
 import streamlit as st
-from PyPDF2 import PdfReader
+import PyPDF2
 from docx import Document
 
 from summarizator import Summarizator
@@ -45,7 +45,7 @@ st.sidebar.info(
 # Считываем текст из PDF-файла
 def read_pdf(file_path):
     with open(file_path, "rb") as file:
-        reader = PdfReader(file)
+        reader = PyPDF2.PdfFileReader(file)
         text = ""
         for page in reader.pages:
             text += page.extract_text()
