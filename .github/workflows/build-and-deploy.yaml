@@ -15,16 +15,24 @@ jobs:
     env:
       docker_registry_user: djvue
       docker_registry_password: dckr_pat_xtFqmYgMv2scAvkHO6QdF1V9biY
-      image_base: hackathon-2023-base:latest
+      image_base_prefix: djvue/urfu-deployments:hackathon-2023-base
       image_streamlit: djvue/urfu-deployments:hackathon-2023-streamlit-${{ github.ref_name }}
     steps:
     - uses: actions/checkout@v2
+    - name: Set base image hash
+      run: echo "deps_hash=$(cat requirements.txt | md5sum | awk '{print $1}')" >> $GITHUB_ENV
+    - name: Set base image
+      run: echo "image_base=$image_base_prefix-$deps_hash" >> $GITHUB_ENV
     - name: Login into docker hub
       run: docker login -u $docker_registry_user -p "$docker_registry_password"
     - name: Build the Docker base image
-      run: docker build . --file Dockerfile_base --tag $image_base
+      run: |
+        docker pull $image_base || (\
+          docker build . --file Dockerfile_base --tag $image_base \
+          && docker push $image_base \
+        )
     - name: Build the Docker streamlit image
-      run: docker build . --file Dockerfile_streamlit --tag $image_streamlit
+      run: docker build . --file Dockerfile_streamlit --build-arg DEPS_IMAGE=$image_base --tag $image_streamlit
     - name: Push the Docker streamlit image
       run: docker push $image_streamlit
 

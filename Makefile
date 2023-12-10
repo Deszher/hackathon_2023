@@ -34,7 +34,7 @@ docker-build-base:
 
 .PHONY: docker-build-streamlit
 docker-build-streamlit:
-	docker build -t hackathon-2023-streamlit -f Dockerfile_streamlit .
+	docker build -t hackathon-2023-streamlit --build-arg DEPS_IMAGE=hackathon-2023-base -f Dockerfile_streamlit .
 
 .PHONY: docker-start-streamlit
 docker-start-streamlit:

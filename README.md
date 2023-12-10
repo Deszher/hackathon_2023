@@ -41,7 +41,7 @@ pip install -r requirements.txt
 ```bash
 # Собираем образ
 docker build -t hackathon-2023-base -f Dockerfile_base .
-docker build -t hackathon-2023-streamlit -f Dockerfile_streamlit .
+docker build -t hackathon-2023-streamlit --build-arg DEPS_IMAGE=hackathon-2023-base -f Dockerfile_streamlit .
 
 # Запускаем контейнер
 docker run -p 8501:8501 hackathon-2023-streamlit
