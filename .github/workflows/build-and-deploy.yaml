@@ -5,6 +5,7 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
 
@@ -12,40 +13,43 @@ jobs:
 
     runs-on: ubuntu-latest
     env:
-      gitlab_registry_user: urfu_mlproject
-      gitlab_registry_password: glpat-_f6MA6s1CZwSk2-xPSHP
-      gitlab_registry: registry.gitlab.com/djvue/urfu-deployments
-      image_base_name: hackathon-2023-base
-      image_streamlit_name: hackathon-2023-streamlit
+      docker_registry_user: djvue
+      docker_registry_password: dckr_pat_xtFqmYgMv2scAvkHO6QdF1V9biY
+      docker_registry: djvue/urfu-deployments
+      image_base: $docker_registry:hackathon-2023-base:latest
+      image_streamlit: $docker_registry:hackathon-2023-streamlit-${{ github.ref_name }}
     steps:
     - uses: actions/checkout@v2
     - name: Login into docker hub
-      run: docker login -u $gitlab_registry_user -p "$gitlab_registry_password" registry.gitlab.com
+      run: docker login -u $docker_registry_user -p "$docker_registry_password"
     - name: Build the Docker base image
-      run: docker build . --file Dockerfile_base --tag $image_base_name:latest
+      run: docker build . --file Dockerfile_base --tag $image_base
     - name: Build the Docker streamlit image
-      run: docker build . --file Dockerfile_streamlit --tag $gitlab_registry/$image_streamlit_name:${{ github.ref_name }}
+      run: docker build . --file Dockerfile_streamlit --tag $image_streamlit
     - name: Push the Docker fastapi image
-      run: docker push $gitlab_registry/$image_streamlit_name:${{ github.ref_name }}
+      run: docker push $image_streamlit
 
   deploy:
-
-    needs: build
+    name: Deploy to prod host
     runs-on: ubuntu-latest
     env:
-      target: deploy_hackathon_2023
-      tags: all
-      project_id: 52282824
-      pipeline_trigger_token: glptt-85b4f3b4b72ab0eee91d0de48e09427fc1d20cb7
+      PACKAGES_TO_UPGRADE: ${{ needs.run_publish.outputs.packages }}
+      DISPATCH_TOKEN: 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
+
+      event_type: deploy_hackathon_2023
+      ansible_tags: all
+      image_tag: ${{ github.ref_name }}
+
+    strategy:
+      matrix:
+        repo: ['djvue/urfu-deployments']
+    timeout-minutes: 5
+    # TODO: replace hardcode of token `token $DISPATCH_TOKEN` with `${{ secrets.DISPATCH_TOKEN }}`
     steps:
-    - name: Debug variables
-      run: echo "target=$target image_tag=${{ github.ref_name }} tags=$tags project_id=$project_id"
-    - name: Run deploy pipeline, see https://gitlab.com/djvue/urfu-deployments/-/pipelines
-      run: |
-        curl --request POST \
-              --form "token=$pipeline_trigger_token" \
-              --form ref=master \
-              --form "variables[target]=$target" \
-              --form "variables[image_tag]=${{ github.ref_name }}" \
-              --form "variables[tags]=$tags" \
-              "https://gitlab.com/api/v4/projects/$project_id/trigger/pipeline"
+      - name: Dispatch to workflows
+        run: |
+            curl -H "Accept: application/vnd.github.everest-preview+json" \
+            -H "Authorization: token ${{ secrets.DISPATCH_TOKEN }}" \
+            --request POST \
+            --data '{"event_type": "$event_type", "client_payload": { "ansible_tags": "$ansible_tags", "image_tag": "$image_tag" }}' \
+            https://api.github.com/repos/${{ matrix.repo }}/dispatches
