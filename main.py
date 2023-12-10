@@ -59,26 +59,34 @@ def read_word(file_path):
     return "\n".join(paragraphs)
 
 
+def read_txt(file_path):
+    return open(file_path).read()
+
+
 def load_doc():
     uploaded_file = st.file_uploader(label='Выберите файл с текстом, краткое содержание которого вы хотите получить')
     if uploaded_file is not None:
+        text_str = ''
         # Проверяем формат файла
         if uploaded_file.name.endswith('.pdf'):
             # Считываем текст из PDF-файла
-            text = read_pdf(uploaded_file)
+            text_str = read_pdf(uploaded_file)
         elif uploaded_file.name.endswith('.docx'):
             # Считываем текст из Word-документа
-            text = read_word(uploaded_file)
+            text_str = read_word(uploaded_file)
+        elif uploaded_file.name.endswith('.txt'):
+            # Считываем текст из Word-документа
+            text_str = read_txt(uploaded_file)
         else:
             print("Error: Unsupported file format")
 
         # Проверяем длину текста
-        if len(text) < 30:
+        if len(text_str) < 30:
             print("Error: Input text is too short")
         else:
             ## Разделяем текст на фрагменты максимальной длины последовательности
             chunk_size = 512
-            chunks = [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
+            chunks = [text[i:i + chunk_size] for i in range(0, len(text_str), chunk_size)]
 
             return chunks
 
