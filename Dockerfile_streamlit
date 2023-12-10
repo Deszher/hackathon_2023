@@ -2,7 +2,7 @@ FROM hackathon-2023-base:latest
 
 COPY . .
 
-RUN pytest && rm -r .pytest_cache
+RUN pytest && rm -rf .pytest_cache || true
 
 EXPOSE 8501
 
