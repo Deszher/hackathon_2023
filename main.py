@@ -1,6 +1,7 @@
 import time
 
 import streamlit as st
+from streamlit.runtime.uploaded_file_manager import UploadedFile
 from PyPDF2 import PdfReader
 from docx import Document
 
@@ -43,24 +44,23 @@ st.sidebar.info(
 
 
 # Считываем текст из PDF-файла
-def read_pdf(file_path):
-    with open(file_path, "rb") as file:
-        reader = PdfReader(file)
-        text = ""
-        for page in reader.pages:
-            text += page.extract_text()
-    return text
+def read_pdf(file: UploadedFile) -> str:
+    reader = PdfReader(file)
+    content = ''
+    for page in reader.pages:
+        content += page.extract_text()
+    return content
 
 
 # Считываем текст из Word-документа
-def read_word(file_path):
-    document = Document(file_path)
+def read_word(file: UploadedFile) -> str:
+    document = Document(file)
     paragraphs = [p.text for p in document.paragraphs]
     return "\n".join(paragraphs)
 
 
-def read_txt(file_path):
-    return open(file_path).read()
+def read_txt(file: UploadedFile) -> str:
+    return str(file.read())
 
 
 def load_doc():
@@ -86,7 +86,7 @@ def load_doc():
         else:
             ## Разделяем текст на фрагменты максимальной длины последовательности
             chunk_size = 512
-            chunks = [text[i:i + chunk_size] for i in range(0, len(text_str), chunk_size)]
+            chunks = [text_str[i:i + chunk_size] for i in range(0, len(text_str), chunk_size)]
 
             return chunks
 
@@ -99,6 +99,7 @@ button_pres = st.button('Получить краткое содержание т
 
 # если нажата кнопка, то пауза 1 сек., запуск шариков, вывод краткого содержания
 if res and button_pres:
+    print(res)
     with st.spinner('Wait for it...'):
         time.sleep(1)
         text = summarizator.summarizate(res)

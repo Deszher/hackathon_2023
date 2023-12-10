@@ -34,7 +34,7 @@ source .venv/bin/activate
 # Устанавливаем зависимости в venv
 pip install -r requirements.txt
 # Запускаем WEB-приложение
-streamlit run main.py
+.venv/bin/streamlit run main.py
 ```
 
 ### Использование с докером

@@ -20,4 +20,11 @@ text = """
 def test_summarizate():
     summarizator = Summarizator()
 
-    assert summarizator is not None
+    chunk_size = 512
+    chunks = [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
+    res = summarizator.summarizate(chunks)
+
+    assert res == [
+        '1805 года в Санкт-Петербурге из-за болезни отца в Россию вернулся Пьер Безухов. Его выслали из Петербурга и застали мертвым.',
+        'Не оставив беременную жену на попечение деспотичного отца и сестры, он отправился в Европу воевать, мечтая о славе и военной карьере как у французского императора.',
+    ]

@@ -1,4 +1,5 @@
 from transformers import T5TokenizerFast, T5ForConditionalGeneration
+from typing import List
 
 
 # https://huggingface.co/d0rj/rut5-base-summ
@@ -12,8 +13,7 @@ class Summarizator:
         self._tokenizer = T5TokenizerFast.from_pretrained(self.PRETRAINED_MODEL_NAME)
         self._model = T5ForConditionalGeneration.from_pretrained(self.PRETRAINED_MODEL_NAME)
 
-
-    def summarizate(self, input):
+    def summarizate(self, input: List[str]) -> List[str]:
         summaries = []
         for chunk in input:
             encoded_input = self._tokenizer.encode(chunk, return_tensors='pt')
