@@ -1,0 +1,64 @@
+name: Build docker image and deploy to server
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+    env:
+      docker_registry_user: djvue
+      docker_registry_password: dckr_pat_xtFqmYgMv2scAvkHO6QdF1V9biY
+      image_base_prefix: djvue/urfu-deployments:hackathon-2023-base
+      image_streamlit: djvue/urfu-deployments:hackathon-2023-streamlit-${{ github.ref_name }}
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set base image hash
+      run: echo "deps_hash=$(cat requirements.txt | md5sum | awk '{print $1}')" >> $GITHUB_ENV
+    - name: Set base image
+      run: echo "image_base=$image_base_prefix-$deps_hash" >> $GITHUB_ENV
+    - name: Login into docker hub
+      run: docker login -u $docker_registry_user -p "$docker_registry_password"
+    - name: Build the Docker base image
+      run: |
+        docker pull $image_base || (\
+          docker build . --file Dockerfile_base --tag $image_base \
+          && docker push $image_base \
+        )
+    - name: Build the Docker streamlit image
+      run: docker build . --file Dockerfile_streamlit --build-arg DEPS_IMAGE=$image_base --tag $image_streamlit
+    - name: Push the Docker streamlit image
+      run: docker push $image_streamlit
+
+  deploy:
+    name: Deploy to prod host
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      PACKAGES_TO_UPGRADE: ${{ needs.run_publish.outputs.packages }}
+      DISPATCH_TOKEN1: github_pat_11AKKYWXY0QBbtIhFWoeid_
+      DISPATCH_TOKEN2: tf4cXkjtNBkrZ7WWtNymFle8NG4BxI9eXFWjoMEES8u5VGUQHFVgw7i0Kev
+
+      event_type: deploy_hackathon_2023
+      ansible_tags: all
+      image_tag: ${{ github.ref_name }}
+
+    strategy:
+      matrix:
+        repo: ['djvue/urfu-deployments']
+    timeout-minutes: 5
+    # TODO: replace hardcode of token `token $DISPATCH_TOKEN` with `${{ secrets.DISPATCH_TOKEN }}`
+    steps:
+      - name: Dispatch to workflows
+        run: |
+            curl -H "Accept: application/vnd.github.everest-preview+json" \
+            -H "Authorization: token $DISPATCH_TOKEN1$DISPATCH_TOKEN2" \
+            --request POST \
+            --data "{\"event_type\": \"$event_type\", \"client_payload\": { \"ansible_tags\": \"$ansible_tags\", \"image_tag\": \"$image_tag\" }}" \
+            https://api.github.com/repos/${{ matrix.repo }}/dispatches

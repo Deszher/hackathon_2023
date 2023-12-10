@@ -1,10 +1,10 @@
 import time
 
 import streamlit as st
-from PyPDF2 import PdfReader
-from docx import Document
+from typing import Optional, List
 
 from summarizator import Summarizator
+from extract_file import extract_file
 
 summarizator = Summarizator()
 
@@ -42,47 +42,18 @@ st.sidebar.info(
 )
 
 
-# Считываем текст из PDF-файла
-def read_pdf(file_path):
-    with open(file_path, "rb") as file:
-        reader = PdfReader(file)
-        text = ""
-        for page in reader.pages:
-            text += page.extract_text()
-    return text
-
-
-# Считываем текст из Word-документа
-def read_word(file_path):
-    document = Document(file_path)
-    paragraphs = [p.text for p in document.paragraphs]
-    return "\n".join(paragraphs)
-
-
-def load_doc():
+def load_doc() -> Optional[List[str]]:
     uploaded_file = st.file_uploader(label='Выберите файл с текстом, краткое содержание которого вы хотите получить')
-    if uploaded_file is not None:
-        # Проверяем формат файла
-        if uploaded_file.name.endswith('.pdf'):
-            # Считываем текст из PDF-файла
-            text = read_pdf(uploaded_file)
-        elif uploaded_file.name.endswith('.docx'):
-            # Считываем текст из Word-документа
-            text = read_word(uploaded_file)
-        else:
-            print("Error: Unsupported file format")
 
-        # Проверяем длину текста
-        if len(text) < 30:
-            print("Error: Input text is too short")
-        else:
-            ## Разделяем текст на фрагменты максимальной длины последовательности
-            chunk_size = 512
-            chunks = [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
+    if uploaded_file is None:
+        return None
 
-            return chunks
-
-    else:
+    chunks = []
+    try:
+        chunks = extract_file(uploaded_file)
+        return chunks
+    except Exception as err:
+        print(err)
         return None
 
 
@@ -91,6 +62,7 @@ button_pres = st.button('Получить краткое содержание т
 
 # если нажата кнопка, то пауза 1 сек., запуск шариков, вывод краткого содержания
 if res and button_pres:
+    print(res)
     with st.spinner('Wait for it...'):
         time.sleep(1)
         text = summarizator.summarizate(res)
