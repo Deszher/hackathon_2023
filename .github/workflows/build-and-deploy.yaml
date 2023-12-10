@@ -1,0 +1,51 @@
+name: Build docker image and deploy to server
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+    env:
+      gitlab_registry_user: urfu_mlproject
+      gitlab_registry_password: glpat-_f6MA6s1CZwSk2-xPSHP
+      gitlab_registry: registry.gitlab.com/djvue/urfu-deployments
+      image_base_name: hackathon-2023-base
+      image_streamlit_name: hackathon-2023-streamlit
+    steps:
+    - uses: actions/checkout@v2
+    - name: Login into docker hub
+      run: docker login -u $gitlab_registry_user -p "$gitlab_registry_password" registry.gitlab.com
+    - name: Build the Docker base image
+      run: docker build . --file Dockerfile_base --tag $image_base_name:latest
+    - name: Build the Docker streamlit image
+      run: docker build . --file Dockerfile_streamlit --tag $gitlab_registry/$image_streamlit_name:${{ github.ref_name }}
+    - name: Push the Docker fastapi image
+      run: docker push $gitlab_registry/$image_streamlit_name:${{ github.ref_name }}
+
+  deploy:
+
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      target: deploy_hackathon_2023
+      tags: all
+      project_id: 52282824
+      pipeline_trigger_token: glptt-85b4f3b4b72ab0eee91d0de48e09427fc1d20cb7
+    steps:
+    - name: Debug variables
+      run: echo "target=$target image_tag=${{ github.ref_name }} tags=$tags project_id=$project_id"
+    - name: Run deploy pipeline, see https://gitlab.com/djvue/urfu-deployments/-/pipelines
+      run: |
+        curl --request POST \
+              --form "token=$pipeline_trigger_token" \
+              --form ref=master \
+              --form "variables[target]=$target" \
+              --form "variables[image_tag]=${{ github.ref_name }}" \
+              --form "variables[tags]=$tags" \
+              "https://gitlab.com/api/v4/projects/$project_id/trigger/pipeline"
