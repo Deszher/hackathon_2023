@@ -1,11 +1,10 @@
 import time
 
 import streamlit as st
-from streamlit.runtime.uploaded_file_manager import UploadedFile
-from PyPDF2 import PdfReader
-from docx import Document
+from typing import Optional, List
 
 from summarizator import Summarizator
+from extract_file import extract_file
 
 summarizator = Summarizator()
 
@@ -43,54 +42,18 @@ st.sidebar.info(
 )
 
 
-# Считываем текст из PDF-файла
-def read_pdf(file: UploadedFile) -> str:
-    reader = PdfReader(file)
-    content = ''
-    for page in reader.pages:
-        content += page.extract_text()
-    return content
-
-
-# Считываем текст из Word-документа
-def read_word(file: UploadedFile) -> str:
-    document = Document(file)
-    paragraphs = [p.text for p in document.paragraphs]
-    return "\n".join(paragraphs)
-
-
-def read_txt(file: UploadedFile) -> str:
-    return str(file.read())
-
-
-def load_doc():
+def load_doc() -> Optional[List[str]]:
     uploaded_file = st.file_uploader(label='Выберите файл с текстом, краткое содержание которого вы хотите получить')
-    if uploaded_file is not None:
-        text_str = ''
-        # Проверяем формат файла
-        if uploaded_file.name.endswith('.pdf'):
-            # Считываем текст из PDF-файла
-            text_str = read_pdf(uploaded_file)
-        elif uploaded_file.name.endswith('.docx'):
-            # Считываем текст из Word-документа
-            text_str = read_word(uploaded_file)
-        elif uploaded_file.name.endswith('.txt'):
-            # Считываем текст из Word-документа
-            text_str = read_txt(uploaded_file)
-        else:
-            print("Error: Unsupported file format")
 
-        # Проверяем длину текста
-        if len(text_str) < 30:
-            print("Error: Input text is too short")
-        else:
-            ## Разделяем текст на фрагменты максимальной длины последовательности
-            chunk_size = 512
-            chunks = [text_str[i:i + chunk_size] for i in range(0, len(text_str), chunk_size)]
+    if uploaded_file is None:
+        return None
 
-            return chunks
-
-    else:
+    chunks = []
+    try:
+        chunks = extract_file(uploaded_file)
+        return chunks
+    except Exception as err:
+        print(err)
         return None
 
 
