@@ -15,9 +15,8 @@ jobs:
     env:
       docker_registry_user: djvue
       docker_registry_password: dckr_pat_xtFqmYgMv2scAvkHO6QdF1V9biY
-      docker_registry: djvue/urfu-deployments
-      image_base: $docker_registry:hackathon-2023-base:latest
-      image_streamlit: $docker_registry:hackathon-2023-streamlit-${{ github.ref_name }}
+      image_base: hackathon-2023-base:latest
+      image_streamlit: djvue/urfu-deployments:hackathon-2023-streamlit-${{ github.ref_name }}
     steps:
     - uses: actions/checkout@v2
     - name: Login into docker hub
@@ -26,11 +25,12 @@ jobs:
       run: docker build . --file Dockerfile_base --tag $image_base
     - name: Build the Docker streamlit image
       run: docker build . --file Dockerfile_streamlit --tag $image_streamlit
-    - name: Push the Docker fastapi image
+    - name: Push the Docker streamlit image
       run: docker push $image_streamlit
 
   deploy:
     name: Deploy to prod host
+    needs: build
     runs-on: ubuntu-latest
     env:
       PACKAGES_TO_UPGRADE: ${{ needs.run_publish.outputs.packages }}
@@ -52,5 +52,5 @@ jobs:
             curl -H "Accept: application/vnd.github.everest-preview+json" \
             -H "Authorization: token $DISPATCH_TOKEN1$DISPATCH_TOKEN2" \
             --request POST \
-            --data '{"event_type": "$event_type", "client_payload": { "ansible_tags": "$ansible_tags", "image_tag": "$image_tag" }}' \
+            --data "{\"event_type\": \"$event_type\", \"client_payload\": { \"ansible_tags\": \"$ansible_tags\", \"image_tag\": \"$image_tag\" }}" \
             https://api.github.com/repos/${{ matrix.repo }}/dispatches
