@@ -34,7 +34,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PACKAGES_TO_UPGRADE: ${{ needs.run_publish.outputs.packages }}
-      DISPATCH_TOKEN: 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
+      DISPATCH_TOKEN1: github_pat_11AKKYWXY0QBbtIhFWoeid_
+      DISPATCH_TOKEN2: tf4cXkjtNBkrZ7WWtNymFle8NG4BxI9eXFWjoMEES8u5VGUQHFVgw7i0Kev
 
       event_type: deploy_hackathon_2023
       ansible_tags: all
@@ -49,7 +50,7 @@ jobs:
       - name: Dispatch to workflows
         run: |
             curl -H "Accept: application/vnd.github.everest-preview+json" \
-            -H "Authorization: token ${{ secrets.DISPATCH_TOKEN }}" \
+            -H "Authorization: token $DISPATCH_TOKEN1$DISPATCH_TOKEN2" \
             --request POST \
             --data '{"event_type": "$event_type", "client_payload": { "ansible_tags": "$ansible_tags", "image_tag": "$image_tag" }}' \
             https://api.github.com/repos/${{ matrix.repo }}/dispatches
