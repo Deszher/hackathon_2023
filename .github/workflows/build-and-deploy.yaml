@@ -13,8 +13,8 @@ jobs:
 
     runs-on: ubuntu-latest
     env:
-      docker_registry_user: djvue
-      docker_registry_password: dckr_pat_xtFqmYgMv2scAvkHO6QdF1V9biY
+      docker_registry_user: ${{ secrets.CI_REGISTRY_USER }}
+      docker_registry_password: ${{ secrets.CI_REGISTRY_PASSWORD }}
       image_base_prefix: djvue/urfu-deployments:hackathon-2023-base
       image_streamlit: djvue/urfu-deployments:hackathon-2023-streamlit-${{ github.ref_name }}
     steps:
@@ -42,8 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PACKAGES_TO_UPGRADE: ${{ needs.run_publish.outputs.packages }}
-      DISPATCH_TOKEN1: github_pat_11AKKYWXY0QBbtIhFWoeid_
-      DISPATCH_TOKEN2: tf4cXkjtNBkrZ7WWtNymFle8NG4BxI9eXFWjoMEES8u5VGUQHFVgw7i0Kev
+      DISPATCH_TOKEN: ${{ secrets.DISPATCH_TOKEN }}
 
       event_type: deploy_hackathon_2023
       ansible_tags: all
@@ -53,12 +52,11 @@ jobs:
       matrix:
         repo: ['djvue/urfu-deployments']
     timeout-minutes: 5
-    # TODO: replace hardcode of token `token $DISPATCH_TOKEN` with `${{ secrets.DISPATCH_TOKEN }}`
     steps:
       - name: Dispatch to workflows
         run: |
             curl -H "Accept: application/vnd.github.everest-preview+json" \
-            -H "Authorization: token $DISPATCH_TOKEN1$DISPATCH_TOKEN2" \
+            -H "Authorization: token $DISPATCH_TOKEN" \
             --request POST \
             --data "{\"event_type\": \"$event_type\", \"client_payload\": { \"ansible_tags\": \"$ansible_tags\", \"image_tag\": \"$image_tag\" }}" \
             https://api.github.com/repos/${{ matrix.repo }}/dispatches
