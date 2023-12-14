@@ -5,6 +5,7 @@ from typing import Optional, List
 
 from summarizator import Summarizator
 from extract_file import extract_file
+from text_to_speach import write_file, convert
 
 summarizator = Summarizator()
 
@@ -60,6 +61,9 @@ def load_doc() -> Optional[List[str]]:
 res = load_doc()
 button_pres = st.button('Получить краткое содержание текста')
 
+if 'text' not in st.session_state:
+    st.session_state.text = []
+
 # если нажата кнопка, то пауза 1 сек., запуск шариков, вывод краткого содержания
 if res and button_pres:
     print(res)
@@ -73,6 +77,10 @@ if res and button_pres:
     for num, s in enumerate(text):
         st.write(f"{num+1} тезис:")
         st.write(s)
+
+    text_to_audio = convert(write_file(" ".join(st.session_state.text)))
+    time.sleep(1)
+    st.audio(text_to_audio, format="audio/raw", start_time=0, sample_rate=None)
 
 # streamlit run main.py
 
