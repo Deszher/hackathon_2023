@@ -61,14 +61,12 @@ def convert(filename):
     :param filename:
     :return:
     """
-    # # собираю команду конвертации
-    cmd = " ".join([
-        root_path + "\\sox\\sox.exe",
-        "-r 48000 -b 16 -e signed-integer -c 1",
-        target_path + filename + ".raw",
-        target_path + filename + ".wav"
-    ])
 
-    # выполняю команду конвертации
-    subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+    with open(target_path + filename + ".raw", "rb") as inp_f:
+        data = inp_f.read()
+        with wave.open(target_path + filename + ".wav", "wb") as out_f:
+            out_f.setnchannels(1)
+            out_f.setsampwidth(2)  # number of bytes
+            out_f.setframerate(48000)
+            out_f.writeframesraw(data)
     return f"{target_path + filename}.wav"
