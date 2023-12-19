@@ -14,7 +14,7 @@ install-deps:
 
 .PHONY: dump-deps
 dump-deps:
-	. ./.venv/bin/activate && echo "--extra-index-url https://download.pytorch.org/whl/cpu" > requirements.txt && python -m pip freeze >> requirements.txt
+	. ./.venv/bin/activate && python -m pip freeze > requirements.txt
 
 .PHONY: version
 version:
