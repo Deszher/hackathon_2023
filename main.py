@@ -5,8 +5,12 @@ from typing import Optional, List
 
 from summarizator import Summarizator
 from extract_file import extract_file
-from text_to_speach import write_file, convert
+from text_to_speach import TTSProvider
+from config import Config
 
+config = Config.from_env()
+
+tts = TTSProvider(config.yandex_tts_token)
 summarizator = Summarizator()
 
 #  логотип и название
@@ -78,7 +82,7 @@ if res and button_pres:
         st.write(f"{num+1} тезис:")
         st.write(s)
 
-    text_to_audio = convert(write_file(" ".join(st.session_state.text)))
+    text_to_audio = tts.convert(tts.write_file(" ".join(st.session_state.text)))
     time.sleep(1)
     st.audio(text_to_audio, format="audio/raw", start_time=0, sample_rate=None)
 
