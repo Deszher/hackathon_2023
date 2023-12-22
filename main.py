@@ -82,7 +82,7 @@ if res and button_pres:
         st.write(f"{num+1} тезис:")
         st.write(s)
 
-    text_to_audio = tts.convert(tts.write_file(" ".join(text[0])))
+    text_to_audio = tts.convert(tts.write_file(text[0]))
     time.sleep(1)
     st.audio(text_to_audio, format="audio/raw", start_time=0, sample_rate=None)
 
