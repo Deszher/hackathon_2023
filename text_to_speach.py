@@ -2,6 +2,7 @@ import os
 import time
 
 import requests
+import wave
 
 # https://yandex.ru/video/preview/13029480301595259351
 
@@ -36,8 +37,7 @@ class TTSProvider:
             for chunk in resp.iter_content(chunk_size=None):
                 yield chunk
 
-    @staticmethod
-    def write_file(text):
+    def write_file(self, text):
         """
         Пишет чанки в файл
         :param text:
@@ -46,7 +46,7 @@ class TTSProvider:
 
         filename = str(int(time.time()))
         with open(filename + ".raw", "wb") as f:
-            for audio_content in synthesize(text):
+            for audio_content in self.synthesize(text):
                 f.write(audio_content)
 
         time.sleep(2)
